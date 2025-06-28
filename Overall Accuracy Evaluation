@@ -1,0 +1,64 @@
+"""
+Overall Accuracy Evaluation from OBJ Files.
+The RGB labels for every vertex are read from.obj files.
+It calculate the total accuracy by comparing the predicted labels with the ground truth labels.
+All files load manually from result folder.
+"""
+import numpy as np
+import os
+def read_obj_file(file_path):
+    data = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            parts = line.strip().split()
+            if parts and parts[0] == 'v':
+                rgb_labels = parts[-3:]  # last 3 values are assumed to be R G B
+                rgb_labels = tuple(map(int, rgb_labels))
+                data.append(rgb_labels)
+    return data
+
+#  Function to Calculate Overall Accuracy
+
+def calculate_overall_accuracy(predictions, ground_truth):
+    if not predictions or not ground_truth or len(predictions) != len(ground_truth):
+        return np.nan  
+
+    correct_predictions = sum(1 for p, g in zip(predictions, ground_truth) if p == g)
+    total_predictions = len(ground_truth)
+
+    return correct_predictions / total_predictions if total_predictions > 0 else np.nan
+
+#  Path to directory of OBJ prediction and GT files 
+data_dir = r"C:\Users\Afnan\Desktop\OA and PartIoUpretrained model\2edPro\Refrigerator" #one object of PartaNet dataset
+pred_files = [f for f in os.listdir(data_dir) if '_pred.obj' in f]
+overall_accuracy_results = []
+for pred_file in pred_files:
+    base_name = pred_file.replace('_pred.obj', '')
+    gt_file = base_name + '_gt.obj'
+    pred_file_path = os.path.join(data_dir, pred_file)
+    gt_file_path = os.path.join(data_dir, gt_file)
+
+    # Read RGB labels
+    predictions = read_obj_file(pred_file_path)
+    ground_truth = read_obj_file(gt_file_path)
+
+    # Compute accuracy for this file
+    overall_accuracy = calculate_overall_accuracy(predictions, ground_truth)
+    overall_accuracy_results.append(overall_accuracy)
+
+    # Display result
+    print(f" Overall Accuracy for {base_name}: {overall_accuracy:.2f}")
+
+#  Final Result: Average Accuracy
+average_overall_accuracy = np.nanmean(overall_accuracy_results)  
+print(f"\n Average Overall Accuracy across all objects: {average_overall_accuracy:.2f}")
+
+
+
+
+
+
+
+
+
+
