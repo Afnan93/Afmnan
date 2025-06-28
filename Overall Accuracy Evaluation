@@ -49,7 +49,7 @@ for pred_file in pred_files:
     # Display result
     print(f" Overall Accuracy for {base_name}: {overall_accuracy:.2f}")
 
-#  Final Result: Average Accuracy
+#  Final Result
 average_overall_accuracy = np.nanmean(overall_accuracy_results)  
 print(f"\n Average Overall Accuracy across all objects: {average_overall_accuracy:.2f}")
 
