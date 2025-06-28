@@ -1,0 +1,62 @@
+"""
+Mean Pixel Accuracy (MPA) Calculation from OBJ Files
+-------------------------------------------------------
+This script computes MPA across all classes, 
+By reading 3D.obj files containing RGB labels at each vertex and comparing the predicted labels with the ground truth labels.
+This part of a Part segmentation evaluation of the PartNet dataset.
+"""
+
+import numpy as np
+import os
+def read_obj_file(file_path):
+    data = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            parts = line.strip().split()
+            if parts and parts[0] == 'v':  # 'v' lines contain vertex and RGB info
+                rgb_labels = parts[-3:]  # Get last 3 values: R, G, B
+                rgb_labels = tuple(map(int, rgb_labels))
+                data.append(rgb_labels)
+    return data
+#  Compute MPA = Mean Accuracy Per Class
+def calculate_class_accuracies(predictions, ground_truth):
+    if not predictions or not ground_truth or len(predictions) != len(ground_truth):
+        return np.nan  # skip if data is invalid or mismatched
+    combined = list(zip(predictions, ground_truth))
+    class_accuracies = []
+    unique_classes = set(predictions + ground_truth)  # list of all classes uses
+    for cls in unique_classes:
+        cls_correct = sum(1 for p, g in combined if p == g and p == cls)
+        cls_total = ground_truth.count(cls)
+
+        if cls_total > 0:
+            class_accuracies.append(cls_correct / cls_total)
+
+    return np.nanmean(class_accuracies)  # MPA: average across all class accuracies
+
+# Folder containing _predicted obj and GT obj files.
+data_dir = r"C:\Users\Afnan\Desktop\OA and PartIoUpretrained model\1stPro\Refrigerator" #one object of the dataset
+
+# Find all prediction files in the folder
+pred_files = [f for f in os.listdir(data_dir) if '_pred.obj' in f]
+
+mpa_results = []
+
+for pred_file in pred_files:
+    base_name = pred_file.replace('_pred.obj', '')
+    gt_file = base_name + '_gt.obj'
+
+    pred_path = os.path.join(data_dir, pred_file)
+    gt_path = os.path.join(data_dir, gt_file)
+
+    predictions = read_obj_file(pred_path)
+    ground_truth = read_obj_file(gt_path)
+
+    mpa = calculate_class_accuracies(predictions, ground_truth)
+    mpa_results.append(mpa)
+
+    print(f" MPA for {base_name}: {mpa:.2f}")
+#  Final Result
+average_mpa = np.nanmean(mpa_results) 
+print(f"\n Average Mean Pixel Accuracy (MPA): {average_mpa:.2f}")
+
