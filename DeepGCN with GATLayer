@@ -1,0 +1,64 @@
+"""
+DeepGCN with GATLayer (Attention Module)
+----------------------------------------
+"""
+import torch
+import torch.nn.functional as F
+from torch.nn import Module, Parameter, LeakyReLU, Dropout, Sequential as Seq
+
+#  from the DeepGCN library
+from gcn_lib.dense import GraphConv2d, ResDynBlock2d, BasicConv, DenseDilatedKnnGraph
+
+# ---------------------------------------------------------------
+# 1- My Attention Layer
+# I built this to learn how GAT works: it uses attention between graph nodes.
+# ---------------------------------------------------------------
+class GATLayer(Module):
+    def __init__(self, in_channels, out_channels):
+        super(GATLayer, self).__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+
+       
+        self.weight = Parameter(torch.Tensor(in_channels, out_channels))
+        self.attention = Parameter(torch.Tensor(2 * out_channels, 1))
+
+        self.leakyrelu = LeakyReLU(0.2)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        torch.nn.init.xavier_uniform_(self.weight, gain=1.414)
+        torch.nn.init.xavier_uniform_(self.attention, gain=1.414)
+
+    def forward(self, x, adj):
+        # x: node features, adj: adjacency matrix (from k-NN graph)
+        h = torch.matmul(x, self.weight)  # transform node features
+        N = h.size()[0]
+
+        # attention scores between nodes (based on adjacency)
+        attention_inputs = torch.cat([h.repeat(1, 1), h[adj]], dim=1)
+        attention_inputs = attention_inputs.view(N, -1, 2 * self.out_channels)
+        attention_scores = torch.matmul(attention_inputs, self.attention).squeeze(2)
+        attention_scores = self.leakyrelu(attention_scores)
+        attention_scores = F.softmax(attention_scores, dim=1)
+
+        # Apply attention scores to weight features
+        h_prime = torch.matmul(attention_scores, h)
+        return h_prime
+# ---------------------------------------------------------------
+# 2- DeepGCN Model with Attention
+# I added my GATLayer into this after DeepGcN class.
+# The rest of the model comes from an existing DeepGCN implementation.
+# ---------------------------------------------------------------
+
+
+        #  Step 1- Add related part after DeepGCN.
+        self.gat_layer = GATLayer(channels, channels)
+        self.dropout = Dropout(p=opt.dropout)
+
+        #   Step 2- Apply attention
+        gat_out = self.gat_layer(feats[-1], self.knn(inputs[:, 0:3]))
+        feats.append(gat_out)
+        feats[-1] = self.dropout(feats[-1])  # regularization
+
+        
