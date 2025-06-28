@@ -3,6 +3,7 @@ Overall Accuracy Evaluation from OBJ Files.
 The RGB labels for every vertex are read from.obj files.
 It calculate the total accuracy by comparing the predicted labels with the ground truth labels.
 All files load manually from result folder.
+This part of a Part segmentation evaluation of the PartNet dataset.
 """
 import numpy as np
 import os
