@@ -3,6 +3,7 @@ Mean Pixel Accuracy (MPA) Calculation from OBJ Files
 -------------------------------------------------------
 This script computes MPA across all classes, 
 By reading 3D.obj files containing RGB labels at each vertex and comparing the predicted labels with the ground truth labels.
+All files load manually from result folder.
 This part of a Part segmentation evaluation of the PartNet dataset.
 """
 
